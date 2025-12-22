@@ -7,9 +7,10 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "file_input.hpp"
+#include "trash_compactor.hpp"
 
 using namespace std;
-#define PRINT(x) std::cout << (x) << std::endl;
 
 int main(int argc, char **argv)
 {
@@ -26,20 +27,14 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    std::ifstream input_file_stream(input_file);
-    if (!input_file_stream.is_open())
-    {
-        std::cerr << "Error: Failed to open input file stream.\n";
-        return EXIT_FAILURE;
-    }
 
-    std::string line;
-    bool ranges_ended = false;
-    while (std::getline(input_file_stream, line))
-    {
-        PRINT(line);
+    FileInput p{input_file};
+    Trash_compactor t {p};
+    auto result = t.calcualate();
 
-    }
+    PRINT(result);
+
+
 
     return 0;
 }
