@@ -14,68 +14,101 @@ Trash_compactor::Trash_compactor(const Input& in) : Parse(in) { parse_input(); }
 
 Trash_compactor::~Trash_compactor(void) {}
 
+long long Trash_compactor::get_result(void) { return _result; }
+
 void Trash_compactor::parse_input(void) {
-    vector<string> lines = _mIn.input();
-    for (auto line : lines) {
-        istringstream f(line);
-        vector<string> numbers_line;
-        string s;
-        while (getline(f, s, ' ')) {
-            if (!s.empty()) {
-                numbers_line.push_back(s);
+    _result = 0;
+    lines = _mIn.input();
+    for (auto l : lines) {
+        cout << format("line size: {}\n", l.size());
+    }
+    int range = lines.front().size();
+
+    vector<int> numbers;
+    for (int i = range - 1; i >= 0; i--) {
+        ColOutput out = get_col_output(i);
+
+        switch (out.op) {
+            case ADD: {
+                cout << format("operation ADD\n");
+                numbers.emplace_back(out.number);
+                for (auto n : numbers) {
+                    cout << format("Numbers {}\n", n);
+                    _result += n;
+                }
+                break;
             }
-        }
-        _mInputParsed.emplace_back(numbers_line);
-    }
+            case MUL: {
+                numbers.emplace_back(out.number);
+                cout << format("operation MUL\n");
+                long long r = 1;
+                for (auto n : numbers) {
+                    cout << format("Numbers {}\n", n);
+                    r *= n;
+                }
+                _result += r;
+                break;
+            }
+            case NO_OP: {
+                numbers.emplace_back(out.number);
+                break;
+            }
+            case SKIP: {
+                numbers.clear();
+                break;
+            }
 
-    _mRowSize = _mInputParsed.at(0).size();
-    for (auto l : _mInputParsed) {
-        assert(_mRowSize == l.size());
-    }
-}
-
-long long Trash_compactor::multiply_nums(const ColInput& input) {
-    long long result = 1;
-    for (auto n : input.nums) {
-        result *= stoll(n);
-    }
-    return result;
-}
-
-long long Trash_compactor::add_nums(const ColInput& input) {
-    long long result = 0;
-    for (auto n : input.nums) {
-        result += stoll(n);
-    }
-    return result;
-}
-
-long long Trash_compactor::calcualate(void) {
-    long long total = 0;
-
-    auto symbols = _mInputParsed.back();
-
-    for (auto i = 0; i < _mRowSize; i++) {
-        ColInput colInput = get_nums_at_col(i);
-        auto symbol = colInput.op;
-
-        if (symbol == "*") {
-            total += multiply_nums(colInput);
-        } else if (symbol == "+") {
-            total += add_nums(colInput);
+            default:
+                break;
         }
     }
-    return total;
+    cout << format("Result is : {}\n", _result);
 }
 
-ColInput Trash_compactor::get_nums_at_col(int col) {
-    vector<string> nums;
-    string operation;
+ColOutput Trash_compactor::get_col_output(const int& col_num) {
+    cout << format("Calucating colout at col number : {}\n", col_num);
+    ColOutput out{.number = 0, .op = NO_OP};
 
-    for (auto i = 0; i < _mInputParsed.size() - 1; i++) {
-        nums.emplace_back(_mInputParsed.at(i).at(col));
+    Operation op;
+    vector<char> vchar;
+    for (auto l : lines) {
+        vchar.emplace_back(l.at(col_num));
     }
-    operation = _mInputParsed.back().at(col);
+    char operation = vchar.back();
+    vchar.pop_back();
 
-    return ColInput{.nums = nums, .op = operation};
+    switch (operation) {
+        case ' ': {
+            op = NO_OP;
+            break;
+        }
+        case '+': {
+            op = ADD;
+            break;
+        }
+        case '*': {
+            op = MUL;
+            break;
+        }
+        default: {
+            op = NO_OP;
+            break;
+        }
+    }
+    string num = "";
+
+    for (auto c : vchar) {
+        if (' ' != c) {
+            num += c;
+        }
+    }
+
+    if (num.empty()) {
+        out.op = SKIP;
+        return out;
+    }
+
+    out.number = stoll(num);
+    out.op = op;
+    return out;
 }

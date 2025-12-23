@@ -9,27 +9,30 @@ using namespace std;
 
 #include "parse.hpp"
 
-struct ColInput {
-    std::vector<std::string> nums;
-    std::string op;
+enum Operation { ADD, MUL, NO_OP, SKIP };
 
-    bool operator==(const ColInput& other) const {
-        return nums == other.nums && op == other.op;
+struct ColOutput {
+    int number;
+    Operation op;
+
+    inline bool operator==(const ColOutput& other) const {
+        return (number == other.number) && (op == other.op);
     }
+
+    bool operator!=(const ColOutput& other) const { return !(*this == other); }
 };
 
 class Trash_compactor : public Parse {
    private:
-    int _mRowSize;
+    long long _result;
+    vector<string>lines;
     vector<vector<string>> _mInputParsed;
     void parse_input(void);
 
    public:
+    long long get_result(void);
     explicit Trash_compactor(const Input& in);
-    long long calcualate(void);
-    ColInput get_nums_at_col(int col);
-    long long multiply_nums(const ColInput& input);
-    long long add_nums(const ColInput& input);
+    ColOutput get_col_output(const int& col_num);
     ~Trash_compactor();
 };
 

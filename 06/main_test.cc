@@ -11,7 +11,8 @@ using namespace std;
 
 struct COMPUTE_INPUT {
     vector<string> input;
-    vector<long long> col_result;
+    int col;
+    ColOutput colOut;
 };
 
 class TestInput : public Input {
@@ -37,45 +38,99 @@ class VERIFY_CALCULATIONS_FIXTURE
     void TearDown() override {}
 };
 
-INSTANTIATE_TEST_SUITE_P(TEST_SUITE_COMPUTE, VERIFY_CALCULATIONS_FIXTURE,
-                         ::testing::Values(COMPUTE_INPUT{
-                             .input = {{"123 328  51 64"},
-                                       {"45 64  387 23"},
-                                       {"6 98  215 314"},
-                                       {"*   +   *   +"}},
-                             .col_result = {33210, 490, 4243455, 401}
+INSTANTIATE_TEST_SUITE_P(
+    TEST_SUITE_COMPUTE, VERIFY_CALCULATIONS_FIXTURE,
+    ::testing::Values(COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    0,
+                                    {1, MUL}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    1,
+                                    {24, NO_OP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    2,
+                                    {356, NO_OP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    3,
+                                    {0, SKIP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    4,
+                                    {369, ADD}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    5,
+                                    {248, NO_OP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    6,
+                                    {8, NO_OP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    7,
+                                    {0, SKIP}},
 
-                         }));
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    8,
+                                    {32, MUL}},
 
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    9,
+                                    {581, NO_OP}},
 
-// Column 0
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    10,
+                                    {175, NO_OP}},
+
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    11,
+                                    {0, SKIP}},
+
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    12,
+                                    {623, ADD}},
+
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    13,
+                                    {431, NO_OP}},
+                      COMPUTE_INPUT{{"123 328  51 64 ", " 45 64  387 23 ",
+                                     "  6 98  215 314", "*   +   *   +  "},
+                                    14,
+                                    {4, NO_OP}}
+
+                      ));
+
 TEST_P(VERIFY_CALCULATIONS_FIXTURE, VERIFY_COL0) {
-    ColInput expected_col{ {"123", "45", "6"}, "*" };
-    ColInput actual_col = _trash->get_nums_at_col(0);
-    ASSERT_EQ(actual_col, expected_col);
-    ASSERT_EQ(_trash->multiply_nums(actual_col), _input.col_result.at(0));
-}
+    ColOutput actual = _trash->get_col_output(_input.col);
 
-// Column 1
-TEST_P(VERIFY_CALCULATIONS_FIXTURE, VERIFY_COL1) {
-    ColInput expected_col{ {"328", "64", "98"}, "+" };
-    ColInput actual_col = _trash->get_nums_at_col(1);
-    ASSERT_EQ(actual_col, expected_col);
-    ASSERT_EQ(_trash->add_nums(actual_col), _input.col_result.at(1));
-}
+    std::cout << "DEBUG: Column " << _input.col << "\n";
+    std::cout << "  Expected number: " << _input.colOut.number
+              << ", Actual number: " << actual.number << "\n";
 
-// Column 2
-TEST_P(VERIFY_CALCULATIONS_FIXTURE, VERIFY_COL2) {
-    ColInput expected_col{ {"51", "387", "215"}, "*" };
-    ColInput actual_col = _trash->get_nums_at_col(2);
-    ASSERT_EQ(actual_col, expected_col);
-    ASSERT_EQ(_trash->multiply_nums(actual_col), _input.col_result.at(2));
-}
+    auto op_to_str = [](Operation op) -> std::string {
+        switch (op) {
+            case ADD:
+                return "+";
+            case MUL:
+                return "*";
+            case NO_OP:
+                return "NO_OP";
+        }
+        return "?";
+    };
 
-// Column 3
-TEST_P(VERIFY_CALCULATIONS_FIXTURE, VERIFY_COL3) {
-    ColInput expected_col{ {"64", "23", "314"}, "+" };
-    ColInput actual_col = _trash->get_nums_at_col(3);
-    ASSERT_EQ(actual_col, expected_col);
-    ASSERT_EQ(_trash->add_nums(actual_col), _input.col_result.at(3));
+    std::cout << "  Expected op: " << op_to_str(_input.colOut.op)
+              << ", Actual op: " << op_to_str(actual.op) << "\n";
+
+    ASSERT_EQ(actual.number, _input.colOut.number);
+    ASSERT_EQ(actual.op, _input.colOut.op);
 }

@@ -30,9 +30,7 @@ int main(int argc, char **argv)
 
     FileInput p{input_file};
     Trash_compactor t {p};
-    auto result = t.calcualate();
 
-    PRINT(result);
 
 
 
